@@ -13,7 +13,7 @@ struct RMCharacter: Codable {
     let status: RMCharacterStatus
     let species: String
     let type: String
-    let gender: String
+    let gender: RMCharacterGender
     let origin: RMOrigin
     let location: RMSingleLocation
     let image: String
