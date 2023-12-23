@@ -15,6 +15,28 @@ final class RMSearchViewController: UIViewController {
             case episode
             case location
             
+            var endPoint: RMEndpoint {
+                switch self {
+                case .character:
+                    return .character
+                case .episode:
+                    return .episode
+                case .location:
+                    return .location
+                }
+            }
+            
+            var searchResultResponseType: Codable.Type {
+                switch self {
+                case .character:
+                    return RMGetAllEpisodesResponse.self
+                case .episode:
+                    return RMGetAllEpisodesResponse.self
+                case .location:
+                    return RMGetAllLocationsResponse.self
+                }
+            }
+            
             var title: String {
                 switch self {
                 case .character:
@@ -88,5 +110,11 @@ extension RMSearchViewController: RMSearchViewDelegate {
         vc.sheetPresentationController?.detents = [.medium()]
         vc.sheetPresentationController?.prefersGrabberVisible = true
         present(vc, animated: true)
+    }
+    
+    func rmSearchView(_ searchView: RMSearchView, didSelectLocation location: RMLocation) {
+        let vc = RMLocationDetailViewController(location: location)
+        vc.navigationItem.largeTitleDisplayMode = .never
+        navigationController?.pushViewController(vc, animated: true)
     }
 }

@@ -9,6 +9,8 @@ import UIKit
 
 protocol RMSearchViewDelegate: AnyObject {
     func rmSearchView(_ searchView: RMSearchView, didSelectOption option: RMSearchInputViewViewModel.DynamicOption)
+    
+    func rmSearchView(_ searchView: RMSearchView, didSelectLocation location: RMLocation)
 }
 
 final class RMSearchView: UIView {
@@ -19,6 +21,7 @@ final class RMSearchView: UIView {
     
     private let searchInputView = RMSearchInputView()
     private let noResultsView = RMNoSearchResultsView()
+    private let resultsView = RMSearchResultsView()
     
     required init?(coder: NSCoder) {
         fatalError()
@@ -29,14 +32,35 @@ final class RMSearchView: UIView {
         super.init(frame: frame)
         backgroundColor = .systemBackground
         translatesAutoresizingMaskIntoConstraints = false
-        addSubviews(noResultsView, searchInputView)
+        addSubviews(noResultsView, searchInputView, resultsView)
         addConstraints()
         
         searchInputView.configure(with: .init(type: viewModel.config.type))
         searchInputView.delegate = self
         
+        resultsView.delegate = self
+        
+        setUpHandlers()
+    }
+    
+    private func setUpHandlers() {
         viewModel.registerOptionChangeBlock { [weak self] tuple in
             self?.searchInputView.update(option: tuple.0, value: tuple.1)
+        }
+        
+        viewModel.registerSearchResultHandler { [weak self] resultsVM in
+            DispatchQueue.main.async {
+                self?.resultsView.configure(with: resultsVM)
+                self?.noResultsView.isHidden = true
+                self?.resultsView.isHidden = false
+            }
+        }
+        
+        viewModel.registerNoResultsHandler { [weak self] in
+            DispatchQueue.main.async {
+                self?.noResultsView.isHidden = false
+                self?.resultsView.isHidden = true
+            }
         }
     }
     
@@ -47,6 +71,12 @@ final class RMSearchView: UIView {
             searchInputView.leftAnchor.constraint(equalTo: leftAnchor),
             searchInputView.rightAnchor.constraint(equalTo: rightAnchor),
             searchInputView.heightAnchor.constraint(equalToConstant: viewModel.config.type == .episode ? 55 : 110),
+            
+            // Results View
+            resultsView.topAnchor.constraint(equalTo: searchInputView.bottomAnchor),
+            resultsView.leftAnchor.constraint(equalTo: leftAnchor),
+            resultsView.rightAnchor.constraint(equalTo: rightAnchor),
+            resultsView.bottomAnchor.constraint(equalTo: bottomAnchor),
             
             // No Results
             noResultsView.widthAnchor.constraint(equalToConstant: 150),
@@ -82,5 +112,19 @@ extension RMSearchView: RMSearchInputViewDelegate {
         delegate?.rmSearchView(self, didSelectOption: option)
     }
     
+    func rmSearchInputView(_ inputView: RMSearchInputView, didChangeSearchText text: String) {
+        viewModel.set(query: text)
+    }
     
+    func rmSearchInputViewDidTapSearchKeyboardButton(_ inputView: RMSearchInputView) {
+        viewModel.executeSearch()
+    }
+    
+}
+
+extension RMSearchView: RMSearchResultsViewDelegate {
+    func rmSearchResultsView(_ resultsView: RMSearchResultsView, didSelectLocationAt index: Int) {
+        guard let location = viewModel.locationSearchResult(at: index) else { return }
+        self.delegate?.rmSearchView(self, didSelectLocation: location)
+    }
 }
