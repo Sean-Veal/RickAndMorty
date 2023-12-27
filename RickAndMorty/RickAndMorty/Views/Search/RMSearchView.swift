@@ -11,6 +11,8 @@ protocol RMSearchViewDelegate: AnyObject {
     func rmSearchView(_ searchView: RMSearchView, didSelectOption option: RMSearchInputViewViewModel.DynamicOption)
     
     func rmSearchView(_ searchView: RMSearchView, didSelectLocation location: RMLocation)
+    func rmSearchView(_ searchView: RMSearchView, didSelectCharacter character: RMCharacter)
+    func rmSearchView(_ searchView: RMSearchView, didSelectEpisode episode: RMEpisode)
 }
 
 final class RMSearchView: UIView {
@@ -126,5 +128,15 @@ extension RMSearchView: RMSearchResultsViewDelegate {
     func rmSearchResultsView(_ resultsView: RMSearchResultsView, didSelectLocationAt index: Int) {
         guard let location = viewModel.locationSearchResult(at: index) else { return }
         self.delegate?.rmSearchView(self, didSelectLocation: location)
+    }
+    
+    func rmSearchResultsView(_ resultsView: RMSearchResultsView, didSelectCharcaterAt index: Int) {
+        guard let character = viewModel.characterSearchResult(at: index) else { return }
+        self.delegate?.rmSearchView(self, didSelectCharacter: character)
+    }
+    
+    func rmSearchResultsView(_ resultsView: RMSearchResultsView, didSelectEpisodeAt index: Int) {
+        guard let episode = viewModel.episodeSearchResult(at: index) else { return }
+        self.delegate?.rmSearchView(self, didSelectEpisode: episode)
     }
 }

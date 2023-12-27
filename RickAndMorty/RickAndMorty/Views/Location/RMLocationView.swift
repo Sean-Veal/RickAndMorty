@@ -23,6 +23,13 @@ final class RMLocationView: UIView {
             UIView.animate(withDuration: 0.3) {
                 self.tableView.alpha = 1
             }
+            
+            viewModel?.registerDidFinishPaginationBlock { [weak self] in
+                DispatchQueue.main.async {
+                    self?.tableView.tableFooterView = nil
+                    self?.tableView.reloadData()
+                }
+            }
         }
     }
     
@@ -105,5 +112,36 @@ extension RMLocationView: UITableViewDataSource {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: RMLocationTableViewCell.cellIdentifier, for: indexPath) as? RMLocationTableViewCell else { fatalError() }
         cell.configure(with: cellViewModel)
         return cell
+    }
+}
+
+extension RMLocationView: UIScrollViewDelegate {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        guard let viewModel = viewModel,
+              !viewModel.cellViewModels.isEmpty,
+              viewModel.shouldShowLoadMoreIndicator,
+              !viewModel.isLoadingMoreLocations
+               else { return }
+        DispatchQueue.main.async {
+            self.showLoadingIndicator()
+        }
+        
+        Timer.scheduledTimer(withTimeInterval: 0.2, repeats: false) { [weak self] timer in
+            let offset = scrollView.contentOffset.y
+            let totalContentHeight = scrollView.contentSize.height
+            let totalScrollViewFixedHeight = scrollView.frame.size.height
+            
+            // Had to add the totalContentHeight check because on app start fetchAdditionalCharacters() fires
+            if totalContentHeight > 0 {
+                if offset >= (totalContentHeight - totalScrollViewFixedHeight - 120) {
+                    self?.viewModel?.fetchAdditionalLocations()
+                }
+            }
+            timer.invalidate()
+        }
+    }
+    
+    private func showLoadingIndicator() {
+        tableView.tableFooterView = RMTableLoadingFooterView(frame: .init(x: 0, y: 0, width: frame.size.width, height: 100))
     }
 }

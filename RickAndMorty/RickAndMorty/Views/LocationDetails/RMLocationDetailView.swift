@@ -175,11 +175,15 @@ extension RMLocationDetailView {
     }
     
     private func createCharacterLayout() -> NSCollectionLayoutSection {
-        let item = NSCollectionLayoutItem(layoutSize: .init(widthDimension: .fractionalWidth(0.5), heightDimension: .fractionalHeight(1)))
+        let item = NSCollectionLayoutItem(layoutSize: .init(
+            widthDimension: .fractionalWidth(UIDevice.isIphone ? 0.5 : 0.25),
+            heightDimension: .fractionalHeight(1)))
         
         item.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10)
         
-        let group = NSCollectionLayoutGroup.horizontal(layoutSize: .init(widthDimension: .fractionalWidth(1), heightDimension: .absolute(260)), subitems: [item])
+        let group = NSCollectionLayoutGroup.horizontal(
+            layoutSize: .init(widthDimension: .fractionalWidth(1), heightDimension: .absolute(UIDevice.isIphone ? 260 : 320)),
+            subitems: UIDevice.isIphone ? [item, item] : [item, item, item, item])
         
         let section = NSCollectionLayoutSection(group: group)
         
